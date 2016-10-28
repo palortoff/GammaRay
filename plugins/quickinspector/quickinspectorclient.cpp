@@ -73,3 +73,8 @@ void QuickInspectorClient::checkServerSideDecorations()
 {
     Endpoint::instance()->invokeObject(objectName(), "checkServerSideDecorations");
 }
+
+void QuickInspectorClient::setGrabMode(QuickInspectorInterface::GrabMode mode)
+{
+    Endpoint::instance()->invokeObject(objectName(), "setGrabMode", { QVariant::fromValue(mode) });
+}

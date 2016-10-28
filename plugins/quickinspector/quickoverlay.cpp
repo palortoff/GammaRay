@@ -36,6 +36,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLPaintDevice>
+#include <QQuickItemGrabResult>
 
 QT_BEGIN_NAMESPACE
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
@@ -123,6 +124,7 @@ QuickOverlay::QuickOverlay()
   : m_currentToplevelItem(nullptr)
   , m_isGrabbingMode(false)
   , m_drawDecorations(true)
+  , m_grabMode(QuickInspectorInterface::FullWindow)
 {
 }
 
@@ -210,11 +212,17 @@ void QuickOverlay::windowAfterRendering()
     dpr = window->devicePixelRatio();
 #endif
 
-    if (m_isGrabbingMode) {
+    if (m_isGrabbingMode && m_grabMode == QuickInspectorInterface::FullWindow) {
         QImage image = qt_gl_read_framebuffer(window->size() * dpr, false, false);
         image.setDevicePixelRatio(dpr);
-        if (!image.isNull())
-            QMetaObject::invokeMethod(this, "sceneGrabbed", Qt::QueuedConnection, Q_ARG(QImage, image));
+        if (!image.isNull()) {
+            QuickItemGeometry itemGeometry;
+            if (m_currentToplevelItem)
+                itemGeometry.initFrom(m_currentToplevelItem);
+            QRectF rect(QRectF(image.rect()) | itemGeometry.itemRect |
+                        itemGeometry.childrenRect | itemGeometry.boundingRect);
+            QMetaObject::invokeMethod(this, "sceneGrabbed", Qt::QueuedConnection, Q_ARG(QImage, image), Q_ARG(QRectF, rect));
+        }
     }
 
     drawDecorations(window->size(), dpr);
@@ -245,7 +253,23 @@ void QuickOverlay::updateOverlay()
         return;
 
     m_effectiveGeometry.initFrom(m_currentItem.data());
-    m_currentToplevelItem->window()->update();
+
+    if (m_isGrabbingMode && m_currentItem.item() && m_grabMode == QuickInspectorInterface::Item) {
+        QSharedPointer<QQuickItemGrabResult> reply = m_currentItem.item()->grabToImage();
+
+        // The lambda needs to be 'mutable' in order to call reply.clear(), otherwise the
+        // QQuickItemGrabResult will never be deleted.
+        connect(reply.data(), &QQuickItemGrabResult::ready, this, [this, reply]() mutable {
+            m_isGrabbingMode = false;
+            auto img = reply->image();
+
+            // We don't set the pixel ratio here, as the image is not scaled up
+            QMetaObject::invokeMethod(this, "sceneGrabbed", Qt::QueuedConnection, Q_ARG(QImage, img), Q_ARG(QRectF, img.rect()));
+            reply.clear();
+        }, Qt::QueuedConnection);
+    } else {
+        m_currentToplevelItem->window()->update();
+    }
 }
 
 void QuickOverlay::itemParentChanged(QQuickItem *parent)
@@ -510,4 +534,13 @@ void QuickOverlay::drawAnchor(QPainter *p, const QuickItemGeometry &itemGeometry
         p->drawLine(foreignAnchorLine, 0, foreignAnchorLine, viewRect.height() * zoom);
     else
         p->drawLine(0, foreignAnchorLine, viewRect.width() * zoom, foreignAnchorLine);
+}
+
+void QuickOverlay::setGrabMode(QuickInspectorInterface::GrabMode mode)
+{
+    if (m_grabMode == mode)
+        return;
+
+    m_grabMode = mode;
+    updateOverlay();
 }

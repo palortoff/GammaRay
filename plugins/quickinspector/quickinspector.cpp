@@ -56,6 +56,7 @@
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QQuickView>
+#include <QQuickItemGrabResult>
 
 #include <QQmlContext>
 #include <QQmlEngine>
@@ -245,6 +246,7 @@ QuickInspector::QuickInspector(ProbeInterface *probe, QObject *parent)
     , m_sgPropertyController(new PropertyController(QStringLiteral(
                                                         "com.kdab.GammaRay.QuickSceneGraph"), this))
     , m_remoteView(new RemoteViewServer(QStringLiteral("com.kdab.GammaRay.QuickRemoteView"), this))
+    , m_grabMode(QuickInspectorInterface::FullWindow)
 {
     registerPCExtensions();
     registerMetaTypes();
@@ -412,6 +414,7 @@ void QuickInspector::recreateOverlay()
 {
     ProbeGuard guard;
     m_overlay = new QuickOverlay;
+    m_overlay->setGrabMode(m_grabMode);
 
     connect(m_overlay.data(), &QuickOverlay::sceneChanged, m_remoteView, &RemoteViewServer::sourceChanged);
     connect(m_overlay.data(), &QuickOverlay::sceneGrabbed, this, &QuickInspector::sendRenderedScene);
@@ -421,15 +424,14 @@ void QuickInspector::recreateOverlay()
     connect(m_overlay.data(), &QObject::destroyed, this, &QuickInspector::recreateOverlay);
 }
 
-void QuickInspector::sendRenderedScene(const QImage &currentFrame)
+void QuickInspector::sendRenderedScene(const QImage &currentFrame, const QRectF &sceneRect)
 {
     RemoteViewFrame frame;
     frame.setImage(currentFrame);
+    frame.setSceneRect(sceneRect);
     QuickItemGeometry itemGeometry;
     if (m_currentItem)
         itemGeometry.initFrom(m_currentItem);
-    frame.setSceneRect(QRectF(currentFrame.rect()) | itemGeometry.itemRect |
-                       itemGeometry.childrenRect | itemGeometry.boundingRect);
     frame.setData(QVariant::fromValue(itemGeometry));
     m_remoteView->sendFrame(frame);
 }
@@ -536,6 +538,16 @@ void QuickInspector::checkFeatures()
 void QuickInspector::checkServerSideDecorations()
 {
     emit serverSideDecorations(m_overlay->drawDecorations());
+}
+
+void QuickInspector::setGrabMode(QuickInspectorInterface::GrabMode mode)
+{
+    if (m_grabMode == mode) {
+        return;
+    }
+
+    m_grabMode = mode;
+    m_overlay->setGrabMode(mode);
 }
 
 void QuickInspector::itemSelectionChanged(const QItemSelection &selection)

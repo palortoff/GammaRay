@@ -56,6 +56,8 @@ public slots:
     void setServerSideDecorationsEnabled(bool enabled) override;
 
     void checkServerSideDecorations() override;
+
+    void setGrabMode(GammaRay::QuickInspectorInterface::GrabMode mode) override;
 };
 }
 

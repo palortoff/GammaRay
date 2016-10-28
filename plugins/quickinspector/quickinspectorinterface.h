@@ -65,8 +65,14 @@ public:
         VisualizeChanges
     };
 
+    enum GrabMode {
+        FullWindow,
+        Item
+    };
+
     Q_ENUMS(RenderMode)
     Q_DECLARE_FLAGS(Features, Feature)
+    Q_ENUMS(PreviewMode)
 
     explicit QuickInspectorInterface(QObject *parent = nullptr);
     ~QuickInspectorInterface();
@@ -83,6 +89,8 @@ public slots:
 
     virtual void checkServerSideDecorations() = 0;
 
+    virtual void setGrabMode(GrabMode mode) = 0;
+
 signals:
     void features(GammaRay::QuickInspectorInterface::Features features);
     void serverSideDecorations(bool enabled);
@@ -91,6 +99,7 @@ signals:
 
 Q_DECLARE_METATYPE(GammaRay::QuickInspectorInterface::Features)
 Q_DECLARE_METATYPE(GammaRay::QuickInspectorInterface::RenderMode)
+Q_DECLARE_METATYPE(GammaRay::QuickInspectorInterface::GrabMode)
 QT_BEGIN_NAMESPACE
 Q_DECLARE_INTERFACE(GammaRay::QuickInspectorInterface,
                     "com.kdab.GammaRay.QuickInspectorInterface/1.0")

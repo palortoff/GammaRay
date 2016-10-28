@@ -85,10 +85,12 @@ public slots:
 
     void checkServerSideDecorations() override;
 
+    void setGrabMode(GammaRay::QuickInspectorInterface::GrabMode mode) override;
+
     void requestElementsAt(const QPoint &pos, GammaRay::RemoteViewInterface::RequestMode mode);
     void pickElementId(const GammaRay::ObjectId& id);
 
-    void sendRenderedScene(const QImage &currentFrame);
+    void sendRenderedScene(const QImage &currentFrame, const QRectF &rect);
 
 protected:
     bool eventFilter(QObject *receiver, QEvent *event) override;
@@ -135,6 +137,7 @@ private:
         QQuickWindow *window;
         QMutex mutex;
     } m_pendingRenderMode;
+    GrabMode m_grabMode;
 };
 
 class QuickInspectorFactory : public QObject,

@@ -85,6 +85,7 @@ private:
     } m_toolBar;
 
     QuickInspectorInterface *m_inspectorInterface;
+    QuickInspectorInterface::GrabMode m_grabMode;
 };
 } // namespace GammaRay
 

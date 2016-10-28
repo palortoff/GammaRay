@@ -32,6 +32,7 @@
 #include <QObject>
 
 #include "quickitemgeometry.h"
+#include "quickinspectorinterface.h"
 
 QT_BEGIN_NAMESPACE
 class QQuickItem;
@@ -89,12 +90,14 @@ public:
     static void drawDecoration(QPainter *painter, const QuickItemGeometry &itemGeometry, const QRectF &viewRect,
                                qreal zoom);
 
+    void setGrabMode(QuickInspectorInterface::GrabMode grabMode);
+
 public slots:
     void requestGrabWindow();
 
 signals:
     void sceneChanged();
-    void sceneGrabbed(const QImage &image);
+    void sceneGrabbed(const QImage &image, const QRectF &rect);
 
 private:
     static void drawArrow(QPainter *p, QPointF first, QPointF second);
@@ -116,6 +119,7 @@ private:
     QuickItemGeometry m_effectiveGeometry;
     bool m_isGrabbingMode;
     bool m_drawDecorations;
+    QuickInspectorInterface::GrabMode m_grabMode;
 };
 }
 
