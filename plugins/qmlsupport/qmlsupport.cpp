@@ -31,6 +31,7 @@
 #include "qmlattachedpropertyadaptor.h"
 #include "qjsvaluepropertyadaptor.h"
 #include "qmlcontextpropertyadaptor.h"
+#include "qmlbindingextension.h"
 #include "qmlcontextextension.h"
 #include "qmltypeextension.h"
 
@@ -345,6 +346,7 @@ QmlSupport::QmlSupport(GammaRay::ProbeInterface *probe, QObject *parent)
     PropertyAdaptorFactory::registerFactory(QJSValuePropertyAdaptorFactory::instance());
     PropertyAdaptorFactory::registerFactory(QmlContextPropertyAdaptorFactory::instance());
 
+    PropertyController::registerExtension<QmlBindingExtension>();
     PropertyController::registerExtension<QmlContextExtension>();
     PropertyController::registerExtension<QmlTypeExtension>();
 
