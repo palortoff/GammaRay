@@ -145,7 +145,7 @@ QuickScenePreview::QuickScenePreview(QuickInspectorInterface *inspector, QWidget
     m_toolBarContent.gridSettings->addAction(gridSettingsAction);
 
     m_toolBar->addActions(m_toolBarContent.visualizeGroup->actions());
-    connect(m_toolBarContent.visualizeGroup, SIGNAL(triggered(QAction*)), this,
+    connect(m_toolBarContent.visualizeGroup, SIGNAL(triggered(QAction*)), m_previewWidget,
             SLOT(visualizeActionTriggered(QAction*)));
 
     m_toolBar->addSeparator();
@@ -156,14 +156,14 @@ QuickScenePreview::QuickScenePreview(QuickInspectorInterface *inspector, QWidget
     m_toolBar->addSeparator();
 
     m_toolBar->addAction(m_toolBarContent.serverSideDecorationsEnabled);
-    connect(m_toolBarContent.serverSideDecorationsEnabled, SIGNAL(triggered(bool)), this,
+    connect(m_toolBarContent.serverSideDecorationsEnabled, SIGNAL(triggered(bool)), m_previewWidget,
             SLOT(serverSideDecorationsTriggered(bool)));
     m_toolBar->addSeparator();
 
     m_toolBar->addAction(m_previewWidget->zoomOutAction());
     m_toolBarContent.zoomCombobox = new QComboBox(this);
     m_toolBarContent.zoomCombobox->setModel(m_previewWidget->zoomLevelModel());
-    connect(m_toolBarContent.zoomCombobox, SIGNAL(currentIndexChanged(int)), this,
+    connect(m_toolBarContent.zoomCombobox, SIGNAL(currentIndexChanged(int)), m_previewWidget,
             SLOT(setZoomLevel(int)));
     connect(m_previewWidget, &RemoteViewWidget::zoomLevelChanged, m_toolBarContent.zoomCombobox,
             &QComboBox::setCurrentIndex);
@@ -193,6 +193,16 @@ QuickScenePreview::QuickScenePreview(QuickInspectorInterface *inspector, QWidget
 QuickScenePreview::~QuickScenePreview()
 {
 
+}
+
+QuickScenePreviewWidget *QuickScenePreview::previewWidget() const
+{
+    return m_previewWidget;
+}
+
+void QuickScenePreview::setPreviewWidget(QuickScenePreviewWidget *previewWidget)
+{
+    m_previewWidget = previewWidget;
 }
 
 QuickScenePreviewWidget::QuickScenePreviewWidget(QuickInspectorInterface *inspector,

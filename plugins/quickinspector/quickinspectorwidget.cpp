@@ -117,9 +117,9 @@ QuickInspectorWidget::QuickInspectorWidget(QWidget *parent)
     new QuickItemTreeWatcher(ui->itemTreeView, ui->sgTreeView, this);
 
     m_previewWidget = new QuickScenePreview(m_interface, this);
-//    m_previewWidget->setPickSourceModel(proxy);
-//    m_previewWidget->setFlagRole(QuickItemModelRole::ItemFlags);
-//    m_previewWidget->setInvisibleMask(QuickItemModelRole::Invisible | QuickItemModelRole::ZeroSize);
+    m_previewWidget->previewWidget()->setPickSourceModel(proxy);
+    m_previewWidget->previewWidget()->setFlagRole(QuickItemModelRole::ItemFlags);
+    m_previewWidget->previewWidget()->setInvisibleMask(QuickItemModelRole::Invisible | QuickItemModelRole::ZeroSize);
 
     ui->itemPropertyWidget->setObjectBaseName(QStringLiteral("com.kdab.GammaRay.QuickItem"));
     ui->sgPropertyWidget->setObjectBaseName(QStringLiteral("com.kdab.GammaRay.QuickSceneGraph"));

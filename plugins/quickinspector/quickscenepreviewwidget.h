@@ -60,6 +60,9 @@ public:
     explicit QuickScenePreview(QuickInspectorInterface *inspector, QWidget *parent = nullptr);
     ~QuickScenePreview();
 
+    QuickScenePreviewWidget *previewWidget() const;
+    void setPreviewWidget(QuickScenePreviewWidget *previewWidget);
+
 private:
     QToolBar *m_toolBar;
     QuickScenePreviewWidget *m_previewWidget;
