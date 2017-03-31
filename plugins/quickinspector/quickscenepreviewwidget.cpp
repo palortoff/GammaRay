@@ -53,6 +53,20 @@ QT_BEGIN_NAMESPACE
 GAMMARAY_ENUM_STREAM_OPERATORS(GammaRay::QuickInspectorInterface::RenderMode)
 QT_END_NAMESPACE
 
+
+QuickScenePreview::QuickScenePreview(QuickInspectorInterface *inspector, QWidget *parent)
+    : QWidget (parent)
+    , m_toolBar(new QToolBar(this))
+    , m_previewWidget(new QuickScenePreviewWidget(inspector, this))
+{
+
+}
+
+QuickScenePreview::~QuickScenePreview()
+{
+
+}
+
 QuickScenePreviewWidget::QuickScenePreviewWidget(QuickInspectorInterface *inspector,
                                                  QWidget *parent)
     : RemoteViewWidget(parent)

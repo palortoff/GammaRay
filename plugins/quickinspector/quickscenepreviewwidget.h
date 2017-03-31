@@ -49,6 +49,21 @@ class QuickInspectorInterface;
 class GridSettingsWidget;
 class QuickOverlayLegend;
 
+class QuickScenePreviewWidget;
+
+class QuickScenePreview : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit QuickScenePreview(QuickInspectorInterface *inspector, QWidget *parent = nullptr);
+    ~QuickScenePreview();
+
+private:
+    QToolBar *m_toolBar;
+    QuickScenePreviewWidget *m_previewWidget;
+};
+
 class QuickScenePreviewWidget : public RemoteViewWidget
 {
     Q_OBJECT

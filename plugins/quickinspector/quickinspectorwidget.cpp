@@ -116,10 +116,10 @@ QuickInspectorWidget::QuickInspectorWidget(QWidget *parent)
 
     new QuickItemTreeWatcher(ui->itemTreeView, ui->sgTreeView, this);
 
-    m_previewWidget = new QuickScenePreviewWidget(m_interface, this);
-    m_previewWidget->setPickSourceModel(proxy);
-    m_previewWidget->setFlagRole(QuickItemModelRole::ItemFlags);
-    m_previewWidget->setInvisibleMask(QuickItemModelRole::Invisible | QuickItemModelRole::ZeroSize);
+    m_previewWidget = new QuickScenePreview(m_interface, this);
+//    m_previewWidget->setPickSourceModel(proxy);
+//    m_previewWidget->setFlagRole(QuickItemModelRole::ItemFlags);
+//    m_previewWidget->setInvisibleMask(QuickItemModelRole::Invisible | QuickItemModelRole::ZeroSize);
 
     ui->itemPropertyWidget->setObjectBaseName(QStringLiteral("com.kdab.GammaRay.QuickItem"));
     ui->sgPropertyWidget->setObjectBaseName(QStringLiteral("com.kdab.GammaRay.QuickSceneGraph"));
@@ -154,28 +154,28 @@ QuickInspectorWidget::~QuickInspectorWidget()
 void QuickInspectorWidget::saveTargetState(QSettings *settings) const
 {
     settings->setValue("tabIndex", ui->tabWidget->currentIndex());
-    settings->setValue("remoteViewState", m_previewWidget->saveState());
+//TODO    settings->setValue("remoteViewState", m_previewWidget->saveState());
 }
 
 void QuickInspectorWidget::restoreTargetState(QSettings *settings)
 {
     ui->tabWidget->setCurrentIndex(settings->value("tabIndex", 0).toInt());
-    m_previewWidget->restoreState(settings->value("remoteViewState").toByteArray());
+//TODO    m_previewWidget->restoreState(settings->value("remoteViewState").toByteArray());
 }
 
 void QuickInspectorWidget::setFeatures(QuickInspectorInterface::Features features)
 {
-    m_previewWidget->setSupportsCustomRenderModes(features);
+//TODO    m_previewWidget->setSupportsCustomRenderModes(features);
 }
 
 void QuickInspectorWidget::setServerSideDecorations(bool enabled)
 {
-    m_previewWidget->setServerSideDecorationsState(enabled);
+//TODO    m_previewWidget->setServerSideDecorationsState(enabled);
 }
 
 void QuickInspectorWidget::setOverlaySettings(const GammaRay::QuickOverlaySettings &settings)
 {
-    m_previewWidget->setOverlaySettingsState(settings);
+//TODO    m_previewWidget->setOverlaySettingsState(settings);
 }
 
 void QuickInspectorWidget::itemSelectionChanged(const QItemSelection &selection)
