@@ -55,6 +55,7 @@ class QuickScenePreview : public QWidget
 {
     Q_OBJECT
 
+
 public:
     explicit QuickScenePreview(QuickInspectorInterface *inspector, QWidget *parent = nullptr);
     ~QuickScenePreview();
@@ -62,44 +63,11 @@ public:
 private:
     QToolBar *m_toolBar;
     QuickScenePreviewWidget *m_previewWidget;
-};
-
-class QuickScenePreviewWidget : public RemoteViewWidget
-{
-    Q_OBJECT
-
-public:
-    explicit QuickScenePreviewWidget(QuickInspectorInterface *inspector, QWidget *parent = nullptr);
-    ~QuickScenePreviewWidget();
-
-    void restoreState(const QByteArray &state) override;
-    QByteArray saveState() const override;
-
-    void setSupportsCustomRenderModes(QuickInspectorInterface::Features supportedCustomRenderModes);
-    void setServerSideDecorationsState(bool enabled);
-    void setOverlaySettingsState(const QuickOverlaySettings &settings);
-
-    QuickInspectorInterface::RenderMode customRenderMode() const;
-    void setCustomRenderMode(QuickInspectorInterface::RenderMode customRenderMode);
-
-    QuickOverlaySettings overlaySettings() const;
-    void setOverlaySettings(const QuickOverlaySettings &settings);
-
-    bool serverSideDecorationsEnabled() const;
-    void setServerSideDecorationsEnabled(bool enabled);
-
-private Q_SLOTS:
-    void visualizeActionTriggered(QAction* current);
-    void serverSideDecorationsTriggered(bool enabled);
-    void gridOffsetChanged(const QPoint &value);
-    void gridCellSizeChanged(const QSize &value);
-
-private:
-    void drawDecoration(QPainter *p) override;
-    void resizeEvent(QResizeEvent *e) override;
+    QuickInspectorInterface *m_inspectorInterface;
+    GridSettingsWidget *m_gridSettingsWidget;
+    QuickOverlayLegend *m_legendTool;
 
     struct {
-        QToolBar *toolbarWidget;
         QComboBox *zoomCombobox;
         QActionGroup *visualizeGroup;
         QAction *visualizeClipping;
@@ -108,11 +76,48 @@ private:
         QAction *visualizeChanges;
         QAction *serverSideDecorationsEnabled;
         QMenu *gridSettings;
-    } m_toolBar;
+    } m_toolBarContent;
+
+    QuickInspectorInterface::RenderMode customRenderMode() const;
+    void setSupportsCustomRenderModes(QuickInspectorInterface::Features supportedCustomRenderModes);
+    void setServerSideDecorationsEnabled(bool enabled);
+    void setCustomRenderMode(QuickInspectorInterface::RenderMode customRenderMode);
+    void setServerSideDecorationsState(bool enabled);
+    bool serverSideDecorationsEnabled() const;
+    void visualizeActionTriggered(QAction* current);
+    void resizeEvent(QResizeEvent *e) override;
+    void setOverlaySettingsState(const QuickOverlaySettings &settings);
+
+private Q_SLOTS:
+    void serverSideDecorationsTriggered(bool enabled);
+    void gridOffsetChanged(const QPoint &value);
+    void gridCellSizeChanged(const QSize &value);
+
+};
+
+class QuickScenePreviewWidget : public RemoteViewWidget
+{
+    Q_OBJECT
+
+    friend class QuickScenePreview;
+
+public:
+    explicit QuickScenePreviewWidget(QuickInspectorInterface *inspector, QWidget *parent = nullptr);
+    ~QuickScenePreviewWidget();
+
+    void restoreState(const QByteArray &state) override;
+    //QByteArray saveState() const override;
+
+    QuickOverlaySettings overlaySettings() const;
+    void setOverlaySettings(const QuickOverlaySettings &settings);
+
+    //void setServerSideDecorationsEnabled(bool enabled);
+
+private:
+    void drawDecoration(QPainter *p) override;
+
 
     QuickOverlaySettings m_overlaySettings;
-    GridSettingsWidget *m_gridSettingsWidget;
-    QuickOverlayLegend *m_legendTool;
 
     QuickInspectorInterface *m_inspectorInterface;
 };

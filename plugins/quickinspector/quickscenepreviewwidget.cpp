@@ -43,6 +43,7 @@
 #include <QLabel>
 #include <QToolBar>
 #include <QToolButton>
+#include <QVBoxLayout>
 
 #include <cmath>
 
@@ -58,53 +59,37 @@ QuickScenePreview::QuickScenePreview(QuickInspectorInterface *inspector, QWidget
     : QWidget (parent)
     , m_toolBar(new QToolBar(this))
     , m_previewWidget(new QuickScenePreviewWidget(inspector, this))
-{
-
-}
-
-QuickScenePreview::~QuickScenePreview()
-{
-
-}
-
-QuickScenePreviewWidget::QuickScenePreviewWidget(QuickInspectorInterface *inspector,
-                                                 QWidget *parent)
-    : RemoteViewWidget(parent)
+    , m_inspectorInterface(inspector)
     , m_gridSettingsWidget(new GridSettingsWidget(this))
     , m_legendTool(new QuickOverlayLegend(this))
-    , m_inspectorInterface(inspector)
 {
-    setName(QStringLiteral("com.kdab.GammaRay.QuickRemoteView"));
+    setLayout(new QVBoxLayout());
 
-    // Toolbar
-    m_toolBar.toolbarWidget = new QToolBar(this);
-    m_toolBar.toolbarWidget->setAutoFillBackground(true);
+    m_toolBarContent.visualizeGroup = new QActionGroup(this);
+    m_toolBarContent.visualizeGroup->setExclusive(false); // we need 0 or 1 selected, not exactly 1
 
-    m_toolBar.visualizeGroup = new QActionGroup(this);
-    m_toolBar.visualizeGroup->setExclusive(false); // we need 0 or 1 selected, not exactly 1
-
-    m_toolBar.visualizeClipping
+    m_toolBarContent.visualizeClipping
         = new QAction(QIcon(QStringLiteral(
                                 ":/gammaray/plugins/quickinspector/visualize-clipping.png")),
                       tr("Visualize Clipping"),
                       this);
-    m_toolBar.visualizeClipping->setActionGroup(m_toolBar.visualizeGroup);
-    m_toolBar.visualizeClipping->setCheckable(true);
-    m_toolBar.visualizeClipping->setToolTip(tr("<b>Visualize Clipping</b><br/>"
+    m_toolBarContent.visualizeClipping->setActionGroup(m_toolBarContent.visualizeGroup);
+    m_toolBarContent.visualizeClipping->setCheckable(true);
+    m_toolBarContent.visualizeClipping->setToolTip(tr("<b>Visualize Clipping</b><br/>"
                                                "Items with the property <i>clip</i> set to true, will cut off their and their "
                                                "children's rendering at the items' bounds. While this is a handy feature it "
                                                "comes with quite some cost, like disabling some performance optimizations.<br/>"
                                                "With this tool enabled the QtQuick renderer highlights items, that have clipping "
                                                "enabled, so you can check for items, that have clipping enabled unnecessarily. "));
 
-    m_toolBar.visualizeOverdraw
+    m_toolBarContent.visualizeOverdraw
         = new QAction(QIcon(QStringLiteral(
                                 ":/gammaray/plugins/quickinspector/visualize-overdraw.png")),
                       tr("Visualize Overdraw"),
                       this);
-    m_toolBar.visualizeOverdraw->setActionGroup(m_toolBar.visualizeGroup);
-    m_toolBar.visualizeOverdraw->setCheckable(true);
-    m_toolBar.visualizeOverdraw->setToolTip(tr("<b>Visualize Overdraw</b><br/>"
+    m_toolBarContent.visualizeOverdraw->setActionGroup(m_toolBarContent.visualizeGroup);
+    m_toolBarContent.visualizeOverdraw->setCheckable(true);
+    m_toolBarContent.visualizeOverdraw->setToolTip(tr("<b>Visualize Overdraw</b><br/>"
                                                "The QtQuick renderer doesn't detect if an item is obscured by another "
                                                "opaque item, is completely outside the scene or outside a clipped ancestor and "
                                                "thus doesn't need to be rendered. You thus need to take care of setting "
@@ -112,13 +97,13 @@ QuickScenePreviewWidget::QuickScenePreviewWidget(QuickInspectorInterface *inspec
                                                "With this tool enabled the QtQuick renderer draws a 3D-Box visualizing the "
                                                "layers of items that are drawn."));
 
-    m_toolBar.visualizeBatches
+    m_toolBarContent.visualizeBatches
         = new QAction(QIcon(QStringLiteral(
                                 ":/gammaray/plugins/quickinspector/visualize-batches.png")),
                       tr("Visualize Batches"), this);
-    m_toolBar.visualizeBatches->setActionGroup(m_toolBar.visualizeGroup);
-    m_toolBar.visualizeBatches->setCheckable(true);
-    m_toolBar.visualizeBatches->setToolTip(tr("<b>Visualize Batches</b><br/>"
+    m_toolBarContent.visualizeBatches->setActionGroup(m_toolBarContent.visualizeGroup);
+    m_toolBarContent.visualizeBatches->setCheckable(true);
+    m_toolBarContent.visualizeBatches->setToolTip(tr("<b>Visualize Batches</b><br/>"
                                               "Where a traditional 2D API, such as QPainter, Cairo or Context2D, is written to "
                                               "handle thousands of individual draw calls per frame, OpenGL is a pure hardware "
                                               "API and performs best when the number of draw calls is very low and state "
@@ -129,78 +114,94 @@ QuickScenePreviewWidget::QuickScenePreviewWidget(QuickInspectorInterface *inspec
                                               "renderer visualizes those batches, by drawing all items that are batched using "
                                               "the same color. The fewer colors you see in this mode the better."));
 
-    m_toolBar.visualizeChanges
+    m_toolBarContent.visualizeChanges
         = new QAction(QIcon(QStringLiteral(
                                 ":/gammaray/plugins/quickinspector/visualize-changes.png")),
                       tr("Visualize Changes"), this);
-    m_toolBar.visualizeChanges->setActionGroup(m_toolBar.visualizeGroup);
-    m_toolBar.visualizeChanges->setCheckable(true);
-    m_toolBar.visualizeChanges->setToolTip(tr("<b>Visualize Changes</b><br>"
+    m_toolBarContent.visualizeChanges->setActionGroup(m_toolBarContent.visualizeGroup);
+    m_toolBarContent.visualizeChanges->setCheckable(true);
+    m_toolBarContent.visualizeChanges->setToolTip(tr("<b>Visualize Changes</b><br>"
                                               "The QtQuick scene is only repainted, if some item changes in a visual manner. "
                                               "Unnecessary repaints can have a bad impact on the performance. With this tool "
                                               "enabled, the QtQuick renderer will thus on each repaint highlight the item(s), "
                                               "that caused the repaint."));
 
-    m_toolBar.serverSideDecorationsEnabled = new QAction(QIcon(QStringLiteral(
+    m_toolBarContent.serverSideDecorationsEnabled = new QAction(QIcon(QStringLiteral(
                                                                ":/gammaray/plugins/quickinspector/active-focus.png")),
                                                      tr("Target Decorations"), this);
-    m_toolBar.serverSideDecorationsEnabled->setCheckable(true);
-    m_toolBar.serverSideDecorationsEnabled->setToolTip(tr("<b>Target Decorations</b><br>"
+    m_toolBarContent.serverSideDecorationsEnabled->setCheckable(true);
+    m_toolBarContent.serverSideDecorationsEnabled->setToolTip(tr("<b>Target Decorations</b><br>"
                                               "This enable or not the decorations on the target application."));
 
     QWidgetAction *gridSettingsAction = new QWidgetAction(this);
     gridSettingsAction->setDefaultWidget(m_gridSettingsWidget);
 
-    m_toolBar.gridSettings = new QMenu(tr("Grid Settings"), this);
-    m_toolBar.gridSettings->setIcon(QIcon(QStringLiteral(
+    m_toolBarContent.gridSettings = new QMenu(tr("Grid Settings"), this);
+    m_toolBarContent.gridSettings->setIcon(QIcon(QStringLiteral(
                                               ":/gammaray/plugins/quickinspector/active-focus.png")));
-    m_toolBar.gridSettings->setToolTip(tr("<b>Grid Settings</b><br>"
+    m_toolBarContent.gridSettings->setToolTip(tr("<b>Grid Settings</b><br>"
                                               "This popup a small widget to configure the grid settings."));
-    m_toolBar.gridSettings->setToolTipsVisible(true);
-    m_toolBar.gridSettings->addAction(gridSettingsAction);
+    m_toolBarContent.gridSettings->setToolTipsVisible(true);
+    m_toolBarContent.gridSettings->addAction(gridSettingsAction);
 
-    m_toolBar.toolbarWidget->addActions(m_toolBar.visualizeGroup->actions());
-    connect(m_toolBar.visualizeGroup, SIGNAL(triggered(QAction*)), this,
+    m_toolBar->addActions(m_toolBarContent.visualizeGroup->actions());
+    connect(m_toolBarContent.visualizeGroup, SIGNAL(triggered(QAction*)), this,
             SLOT(visualizeActionTriggered(QAction*)));
 
-    m_toolBar.toolbarWidget->addSeparator();
+    m_toolBar->addSeparator();
 
-    foreach (auto action, interactionModeActions()->actions()) {
-        m_toolBar.toolbarWidget->addAction(action);
+    foreach (auto action, m_previewWidget->interactionModeActions()->actions()) {
+        m_toolBar->addAction(action);
     }
-    m_toolBar.toolbarWidget->addSeparator();
+    m_toolBar->addSeparator();
 
-    m_toolBar.toolbarWidget->addAction(m_toolBar.serverSideDecorationsEnabled);
-    connect(m_toolBar.serverSideDecorationsEnabled, SIGNAL(triggered(bool)), this,
+    m_toolBar->addAction(m_toolBarContent.serverSideDecorationsEnabled);
+    connect(m_toolBarContent.serverSideDecorationsEnabled, SIGNAL(triggered(bool)), this,
             SLOT(serverSideDecorationsTriggered(bool)));
-    m_toolBar.toolbarWidget->addSeparator();
+    m_toolBar->addSeparator();
 
-    m_toolBar.toolbarWidget->addAction(zoomOutAction());
-    m_toolBar.zoomCombobox = new QComboBox(this);
-    m_toolBar.zoomCombobox->setModel(zoomLevelModel());
-    connect(m_toolBar.zoomCombobox, SIGNAL(currentIndexChanged(int)), this,
+    m_toolBar->addAction(m_previewWidget->zoomOutAction());
+    m_toolBarContent.zoomCombobox = new QComboBox(this);
+    m_toolBarContent.zoomCombobox->setModel(m_previewWidget->zoomLevelModel());
+    connect(m_toolBarContent.zoomCombobox, SIGNAL(currentIndexChanged(int)), this,
             SLOT(setZoomLevel(int)));
-    connect(this, &RemoteViewWidget::zoomLevelChanged, m_toolBar.zoomCombobox,
+    connect(m_previewWidget, &RemoteViewWidget::zoomLevelChanged, m_toolBarContent.zoomCombobox,
             &QComboBox::setCurrentIndex);
-    m_toolBar.zoomCombobox->setCurrentIndex(zoomLevelIndex());
+    m_toolBarContent.zoomCombobox->setCurrentIndex(m_previewWidget->zoomLevelIndex());
 
-    m_toolBar.toolbarWidget->addWidget(m_toolBar.zoomCombobox);
-    m_toolBar.toolbarWidget->addAction(zoomInAction());
+    m_toolBar->addWidget(m_toolBarContent.zoomCombobox);
+    m_toolBar->addAction(m_previewWidget->zoomInAction());
 
-    m_toolBar.toolbarWidget->addSeparator();
-    m_toolBar.toolbarWidget->addAction(m_legendTool->visibilityAction());
-    m_toolBar.toolbarWidget->addAction(m_toolBar.gridSettings->menuAction());
+    m_toolBar->addSeparator();
+    m_toolBar->addAction(m_legendTool->visibilityAction());
+    m_toolBar->addAction(m_toolBarContent.gridSettings->menuAction());
 
-    QToolButton *b = qobject_cast<QToolButton *>(m_toolBar.toolbarWidget->widgetForAction(m_toolBar.gridSettings->menuAction()));
+    QToolButton *b = qobject_cast<QToolButton *>(m_toolBar->widgetForAction(m_toolBarContent.gridSettings->menuAction()));
     b->setPopupMode(QToolButton::InstantPopup);
 
     connect(m_gridSettingsWidget, SIGNAL(offsetChanged(QPoint)), this, SLOT(gridOffsetChanged(QPoint)));
     connect(m_gridSettingsWidget, SIGNAL(cellSizeChanged(QSize)), this, SLOT(gridCellSizeChanged(QSize)));
 
-    setUnavailableText(tr(
+    m_previewWidget->setUnavailableText(tr(
                            "No remote view available.\n(This happens e.g. when the window is minimized or the scene is hidden)"));
 
-    setMinimumWidth(std::max(minimumWidth(), m_toolBar.toolbarWidget->sizeHint().width()));
+    setMinimumWidth(std::max(minimumWidth(), m_toolBar->sizeHint().width()));
+    layout()->addWidget(m_toolBar);
+    layout()->addWidget(m_previewWidget);
+}
+
+QuickScenePreview::~QuickScenePreview()
+{
+
+}
+
+QuickScenePreviewWidget::QuickScenePreviewWidget(QuickInspectorInterface *inspector,
+                                                 QWidget *parent)
+    : RemoteViewWidget(parent)
+
+    , m_inspectorInterface(inspector)
+{
+    setName(QStringLiteral("com.kdab.GammaRay.QuickRemoteView"));
 }
 
 QuickScenePreviewWidget::~QuickScenePreviewWidget()
@@ -209,72 +210,72 @@ QuickScenePreviewWidget::~QuickScenePreviewWidget()
 
 void QuickScenePreviewWidget::restoreState(const QByteArray &state)
 {
-    if (state.isEmpty())
-        return;
+//    if (state.isEmpty())
+//        return;
 
-    QDataStream stream(state);
-    qint32 version;
-    QuickInspectorInterface::RenderMode mode = customRenderMode();
-    bool drawDecorations = serverSideDecorationsEnabled();
-    RemoteViewWidget::restoreState(stream);
+//    QDataStream stream(state);
+//    qint32 version;
+//    QuickInspectorInterface::RenderMode mode = customRenderMode();
+//    bool drawDecorations = serverSideDecorationsEnabled();
+//    RemoteViewWidget::restoreState(stream);
 
-    stream >> version;
+//    stream >> version;
 
-    switch (version) {
-    case 1: {
-        stream
-                >> mode
-        ;
-        break;
-    }
-    case 2: {
-        stream
-                >> mode
-                >> drawDecorations
-        ;
-        break;
-    }
-    }
+//    switch (version) {
+//    case 1: {
+//        stream
+//                >> mode
+//        ;
+//        break;
+//    }
+//    case 2: {
+//        stream
+//                >> mode
+//                >> drawDecorations
+//        ;
+//        break;
+//    }
+//    }
 
-    setCustomRenderMode(mode);
-    setServerSideDecorationsEnabled(drawDecorations);
+//    setCustomRenderMode(mode);
+//    setServerSideDecorationsEnabled(drawDecorations);
 }
 
-QByteArray QuickScenePreviewWidget::saveState() const
+//QByteArray QuickScenePreviewWidget::saveState() const
+//{
+//    QByteArray data;
+
+//    {
+//        QDataStream stream(&data, QIODevice::WriteOnly);
+//        RemoteViewWidget::saveState(stream);
+
+//        stream << QuickScenePreviewWidgetStateVersion;
+
+//        switch (QuickScenePreviewWidgetStateVersion) {
+//        case 1: {
+//            stream
+//                    << customRenderMode()
+//            ;
+//            break;
+//        }
+//        case 2: {
+//            stream
+//                    << customRenderMode()
+//                    << serverSideDecorationsEnabled()
+//            ;
+//            break;
+//        }
+//        }
+//    }
+
+//    return data;
+//}
+
+void QuickScenePreview::resizeEvent(QResizeEvent *e)
 {
-    QByteArray data;
-
-    {
-        QDataStream stream(&data, QIODevice::WriteOnly);
-        RemoteViewWidget::saveState(stream);
-
-        stream << QuickScenePreviewWidgetStateVersion;
-
-        switch (QuickScenePreviewWidgetStateVersion) {
-        case 1: {
-            stream
-                    << customRenderMode()
-            ;
-            break;
-        }
-        case 2: {
-            stream
-                    << customRenderMode()
-                    << serverSideDecorationsEnabled()
-            ;
-            break;
-        }
-        }
-    }
-
-    return data;
-}
-
-void QuickScenePreviewWidget::resizeEvent(QResizeEvent *e)
-{
-    m_toolBar.toolbarWidget->setGeometry(0, 0, width(),
-                                         m_toolBar.toolbarWidget->sizeHint().height());
-    RemoteViewWidget::resizeEvent(e);
+    m_toolBar->setGeometry(0, 0, width(),
+                                         m_toolBar->sizeHint().height());
+    m_previewWidget->resizeEvent(e);
 }
 
 void QuickScenePreviewWidget::drawDecoration(QPainter *p)
@@ -285,93 +286,93 @@ void QuickScenePreviewWidget::drawDecoration(QPainter *p)
     QuickOverlay::drawDecoration(p, QuickOverlay::RenderInfo(m_overlaySettings, itemGeometry, frame().viewRect(), zoom()));
 }
 
-void QuickScenePreviewWidget::visualizeActionTriggered(QAction *current)
+void QuickScenePreview::visualizeActionTriggered(QAction *current)
 {
     if (!current->isChecked()) {
         m_inspectorInterface->setCustomRenderMode(QuickInspectorInterface::NormalRendering);
     } else {
         // QActionGroup requires exactly one selected, but we need 0 or 1 selected
-        foreach (auto action, m_toolBar.visualizeGroup->actions()) {
+        foreach (auto action, m_toolBarContent.visualizeGroup->actions()) {
             if (action != current)
                 action->setChecked(false);
         }
-        m_inspectorInterface->setCustomRenderMode(current == m_toolBar.visualizeClipping ? QuickInspectorInterface::VisualizeClipping
-                                                  : current == m_toolBar.visualizeBatches ? QuickInspectorInterface::VisualizeBatches
-                                                  : current == m_toolBar.visualizeOverdraw ? QuickInspectorInterface::VisualizeOverdraw
-                                                  : current == m_toolBar.visualizeChanges ? QuickInspectorInterface::VisualizeChanges
+        m_inspectorInterface->setCustomRenderMode(current == m_toolBarContent.visualizeClipping ? QuickInspectorInterface::VisualizeClipping
+                                                  : current == m_toolBarContent.visualizeBatches ? QuickInspectorInterface::VisualizeBatches
+                                                  : current == m_toolBarContent.visualizeOverdraw ? QuickInspectorInterface::VisualizeOverdraw
+                                                  : current == m_toolBarContent.visualizeChanges ? QuickInspectorInterface::VisualizeChanges
                                                   : QuickInspectorInterface::NormalRendering
                                                   );
     }
-    emit stateChanged();
+    emit m_previewWidget->stateChanged();
 }
 
-void QuickScenePreviewWidget::serverSideDecorationsTriggered(bool enabled)
+void QuickScenePreview::serverSideDecorationsTriggered(bool enabled)
 {
-    m_toolBar.serverSideDecorationsEnabled->setChecked(enabled);
+    m_toolBarContent.serverSideDecorationsEnabled->setChecked(enabled);
     m_inspectorInterface->setServerSideDecorationsEnabled(enabled);
-    emit stateChanged();
+    emit m_previewWidget->stateChanged();
 }
 
-void QuickScenePreviewWidget::gridOffsetChanged(const QPoint &value)
+void QuickScenePreview::gridOffsetChanged(const QPoint &value)
 {
-    m_overlaySettings.gridOffset = value;
-    m_legendTool->setOverlaySettings(m_overlaySettings);
+    m_previewWidget->m_overlaySettings.gridOffset = value;
+    m_legendTool->setOverlaySettings(m_previewWidget->m_overlaySettings);
     update();
-    setOverlaySettings(m_overlaySettings);
+    m_previewWidget->setOverlaySettings(m_previewWidget->m_overlaySettings);
 }
 
-void QuickScenePreviewWidget::gridCellSizeChanged(const QSize &value)
+void QuickScenePreview::gridCellSizeChanged(const QSize &value)
 {
-    m_overlaySettings.gridCellSize = value;
-    m_legendTool->setOverlaySettings(m_overlaySettings);
+    m_previewWidget->m_overlaySettings.gridCellSize = value;
+    m_legendTool->setOverlaySettings(m_previewWidget->m_overlaySettings);
     update();
-    setOverlaySettings(m_overlaySettings);
+    m_previewWidget->setOverlaySettings(m_previewWidget->m_overlaySettings);
 }
 
-void GammaRay::QuickScenePreviewWidget::setSupportsCustomRenderModes(
+void GammaRay::QuickScenePreview::setSupportsCustomRenderModes(
     QuickInspectorInterface::Features supportedCustomRenderModes)
 {
-    m_toolBar.visualizeClipping->setEnabled(
+    m_toolBarContent.visualizeClipping->setEnabled(
         supportedCustomRenderModes & QuickInspectorInterface::CustomRenderModeClipping);
-    m_toolBar.visualizeBatches->setEnabled(
+    m_toolBarContent.visualizeBatches->setEnabled(
         supportedCustomRenderModes & QuickInspectorInterface::CustomRenderModeBatches);
-    m_toolBar.visualizeOverdraw->setEnabled(
+    m_toolBarContent.visualizeOverdraw->setEnabled(
         supportedCustomRenderModes & QuickInspectorInterface::CustomRenderModeOverdraw);
-    m_toolBar.visualizeChanges->setEnabled(
+    m_toolBarContent.visualizeChanges->setEnabled(
         supportedCustomRenderModes & QuickInspectorInterface::CustomRenderModeChanges);
 }
 
-void QuickScenePreviewWidget::setServerSideDecorationsState(bool enabled)
+void QuickScenePreview::setServerSideDecorationsState(bool enabled)
 {
-    m_toolBar.serverSideDecorationsEnabled->setChecked(enabled);
+    m_toolBarContent.serverSideDecorationsEnabled->setChecked(enabled);
 }
 
-void QuickScenePreviewWidget::setOverlaySettingsState(const QuickOverlaySettings &settings)
+void QuickScenePreview::setOverlaySettingsState(const QuickOverlaySettings &settings)
 {
-    m_overlaySettings = settings;
+    m_previewWidget->m_overlaySettings = settings;
     m_gridSettingsWidget->setOverlaySettings(settings);
     m_legendTool->setOverlaySettings(settings);
 }
 
-QuickInspectorInterface::RenderMode QuickScenePreviewWidget::customRenderMode() const
+QuickInspectorInterface::RenderMode QuickScenePreview::customRenderMode() const
 {
-    if (m_toolBar.visualizeClipping->isChecked()) {
+    if (m_toolBarContent.visualizeClipping->isChecked()) {
         return QuickInspectorInterface::VisualizeClipping;
     }
-    else if (m_toolBar.visualizeBatches->isChecked()) {
+    else if (m_toolBarContent.visualizeBatches->isChecked()) {
         return QuickInspectorInterface::VisualizeBatches;
     }
-    else if (m_toolBar.visualizeOverdraw->isChecked()) {
+    else if (m_toolBarContent.visualizeOverdraw->isChecked()) {
         return QuickInspectorInterface::VisualizeOverdraw;
     }
-    else if (m_toolBar.visualizeChanges->isChecked()) {
+    else if (m_toolBarContent.visualizeChanges->isChecked()) {
         return QuickInspectorInterface::VisualizeChanges;
     }
 
     return QuickInspectorInterface::NormalRendering;
 }
 
-void QuickScenePreviewWidget::setCustomRenderMode(QuickInspectorInterface::RenderMode customRenderMode)
+void QuickScenePreview::setCustomRenderMode(QuickInspectorInterface::RenderMode customRenderMode)
 {
     if (this->customRenderMode() == customRenderMode)
         return;
@@ -381,25 +382,25 @@ void QuickScenePreviewWidget::setCustomRenderMode(QuickInspectorInterface::Rende
     case QuickInspectorInterface::NormalRendering:
         break;
     case QuickInspectorInterface::VisualizeClipping:
-        currentAction = m_toolBar.visualizeClipping;
+        currentAction = m_toolBarContent.visualizeClipping;
         break;
     case QuickInspectorInterface::VisualizeOverdraw:
-        currentAction = m_toolBar.visualizeOverdraw;
+        currentAction = m_toolBarContent.visualizeOverdraw;
         break;
     case QuickInspectorInterface::VisualizeBatches:
-        currentAction = m_toolBar.visualizeBatches;
+        currentAction = m_toolBarContent.visualizeBatches;
         break;
     case QuickInspectorInterface::VisualizeChanges:
-        currentAction = m_toolBar.visualizeChanges;
+        currentAction = m_toolBarContent.visualizeChanges;
         break;
     }
 
-    foreach (auto action, m_toolBar.visualizeGroup->actions()) {
+    foreach (auto action, m_toolBarContent.visualizeGroup->actions()) {
         if (action)
             action->setChecked(currentAction == action);
     }
 
-    visualizeActionTriggered(currentAction ? currentAction : m_toolBar.visualizeBatches);
+    visualizeActionTriggered(currentAction ? currentAction : m_toolBarContent.visualizeBatches);
 }
 
 QuickOverlaySettings QuickScenePreviewWidget::overlaySettings() const
@@ -413,15 +414,15 @@ void QuickScenePreviewWidget::setOverlaySettings(const QuickOverlaySettings &set
     emit stateChanged();
 }
 
-bool QuickScenePreviewWidget::serverSideDecorationsEnabled() const
+bool QuickScenePreview::serverSideDecorationsEnabled() const
 {
-    return m_toolBar.serverSideDecorationsEnabled->isChecked();
+    return m_toolBarContent.serverSideDecorationsEnabled->isChecked();
 }
 
-void QuickScenePreviewWidget::setServerSideDecorationsEnabled(bool enabled)
+void QuickScenePreview::setServerSideDecorationsEnabled(bool enabled)
 {
-    if (m_toolBar.serverSideDecorationsEnabled->isChecked() == enabled)
+    if (m_toolBarContent.serverSideDecorationsEnabled->isChecked() == enabled)
         return;
-    m_toolBar.serverSideDecorationsEnabled->setChecked(enabled);
+    m_toolBarContent.serverSideDecorationsEnabled->setChecked(enabled);
     serverSideDecorationsTriggered(enabled);
 }
