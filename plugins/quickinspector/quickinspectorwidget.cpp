@@ -165,17 +165,17 @@ void QuickInspectorWidget::restoreTargetState(QSettings *settings)
 
 void QuickInspectorWidget::setFeatures(QuickInspectorInterface::Features features)
 {
-//TODO    m_previewWidget->setSupportsCustomRenderModes(features);
+    m_previewWidget->setSupportsCustomRenderModes(features);
 }
 
 void QuickInspectorWidget::setServerSideDecorations(bool enabled)
 {
-//TODO    m_previewWidget->setServerSideDecorationsState(enabled);
+    m_previewWidget->setServerSideDecorationsState(enabled);
 }
 
 void QuickInspectorWidget::setOverlaySettings(const GammaRay::QuickOverlaySettings &settings)
 {
-//TODO    m_previewWidget->setOverlaySettingsState(settings);
+    m_previewWidget->setOverlaySettingsState(settings);
 }
 
 void QuickInspectorWidget::itemSelectionChanged(const QItemSelection &selection)

@@ -63,6 +63,10 @@ public:
     QuickScenePreviewWidget *previewWidget() const;
     void setPreviewWidget(QuickScenePreviewWidget *previewWidget);
 
+    void setSupportsCustomRenderModes(QuickInspectorInterface::Features supportedCustomRenderModes);
+    void setServerSideDecorationsState(bool enabled);
+    void setOverlaySettingsState(const QuickOverlaySettings &settings);
+
 private:
     QToolBar *m_toolBar;
     QuickScenePreviewWidget *m_previewWidget;
@@ -82,14 +86,11 @@ private:
     } m_toolBarContent;
 
     QuickInspectorInterface::RenderMode customRenderMode() const;
-    void setSupportsCustomRenderModes(QuickInspectorInterface::Features supportedCustomRenderModes);
     void setServerSideDecorationsEnabled(bool enabled);
     void setCustomRenderMode(QuickInspectorInterface::RenderMode customRenderMode);
-    void setServerSideDecorationsState(bool enabled);
     bool serverSideDecorationsEnabled() const;
     void visualizeActionTriggered(QAction* current);
     void resizeEvent(QResizeEvent *e) override;
-    void setOverlaySettingsState(const QuickOverlaySettings &settings);
 
 private Q_SLOTS:
     void serverSideDecorationsTriggered(bool enabled);
