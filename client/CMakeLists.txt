@@ -45,6 +45,7 @@ target_link_libraries(gammaray-client
   gammaray_client
   gammaray_common
   ${QT_QTGUI_LIBRARIES}
+  ${QT_QTNETWORK_LIBRARIES}
 )
 
 gammaray_embed_info_plist(gammaray-client ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in)

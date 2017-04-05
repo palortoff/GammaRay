@@ -37,12 +37,15 @@
 
 #include <QApplication>
 #include <QStringList>
+#include <QNetworkProxyFactory>
 
 using namespace GammaRay;
 
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+    QNetworkProxyFactory::setUseSystemConfiguration(false);
+
     Paths::setRelativeRootPath(GAMMARAY_INVERSE_LIBEXEC_DIR);
     Translator::loadStandAloneTranslations();
     ClientConnectionManager::init();
